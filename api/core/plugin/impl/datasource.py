@@ -5,6 +5,9 @@ from core.datasource.entities.datasource_entities import (
     DatasourceMessage,
     GetOnlineDocumentPageContentRequest,
     OnlineDocumentPagesMessage,
+    OnlineDriveBrowseFilesRequest,
+    OnlineDriveBrowseFilesResponse,
+    OnlineDriveDownloadFileRequest,
     WebsiteCrawlMessage,
 )
 from core.plugin.entities.plugin import DatasourceProviderID, GenericProviderID
@@ -191,6 +194,78 @@ class PluginDatasourceManager(BasePluginClient):
                 "Content-Type": "application/json",
             },
         )
+
+    def online_drive_browse_files(
+        self,
+        tenant_id: str,
+        user_id: str,
+        datasource_provider: str,
+        datasource_name: str,
+        credentials: dict[str, Any],
+        request: OnlineDriveBrowseFilesRequest,
+        provider_type: str,
+    ) -> Generator[OnlineDriveBrowseFilesResponse, None, None]:
+        """
+        Invoke the datasource with the given tenant, user, plugin, provider, name, credentials and parameters.
+        """
+
+        datasource_provider_id = GenericProviderID(datasource_provider)
+
+        response = self._request_with_plugin_daemon_response_stream(
+            "POST",
+            f"plugin/{tenant_id}/dispatch/datasource/online_drive_browse_files",
+            OnlineDriveBrowseFilesResponse,
+            data={
+                "user_id": user_id,
+                "data": {
+                    "provider": datasource_provider_id.provider_name,
+                    "datasource": datasource_name,
+                    "credentials": credentials,
+                    "request": request.model_dump(),
+                },
+            },
+            headers={
+                "X-Plugin-ID": datasource_provider_id.plugin_id,
+                "Content-Type": "application/json",
+            },
+        )
+        yield from response
+
+    def online_drive_download_file(
+        self,
+        tenant_id: str,
+        user_id: str,
+        datasource_provider: str,
+        datasource_name: str,
+        credentials: dict[str, Any],
+        request: OnlineDriveDownloadFileRequest,
+        provider_type: str,
+    ) -> Generator[DatasourceMessage, None, None]:
+        """
+        Invoke the datasource with the given tenant, user, plugin, provider, name, credentials and parameters.
+        """
+
+        datasource_provider_id = GenericProviderID(datasource_provider)
+
+        response = self._request_with_plugin_daemon_response_stream(
+            "POST",
+            f"plugin/{tenant_id}/dispatch/datasource/online_drive_download_file",
+            DatasourceMessage,
+            data={
+                "user_id": user_id,
+                "data": {
+                    "provider": datasource_provider_id.provider_name,
+                    "datasource": datasource_name,
+                    "credentials": credentials,
+                    "request": request.model_dump(),
+                },
+            },
+            headers={
+                "X-Plugin-ID": datasource_provider_id.plugin_id,
+                "Content-Type": "application/json",
+            },
+        )
+        yield from response
 
     def validate_provider_credentials(
         self, tenant_id: str, user_id: str, provider: str, plugin_id: str, credentials: dict[str, Any]
