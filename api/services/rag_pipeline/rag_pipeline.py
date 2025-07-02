@@ -20,9 +20,12 @@ from core.datasource.entities.datasource_entities import (
     DatasourceProviderType,
     GetOnlineDocumentPageContentRequest,
     OnlineDocumentPagesMessage,
+    OnlineDriveBrowseFilesRequest,
+    OnlineDriveBrowseFilesResponse,
     WebsiteCrawlMessage,
 )
 from core.datasource.online_document.online_document_plugin import OnlineDocumentDatasourcePlugin
+from core.datasource.online_drive.online_drive_plugin import OnlineDriveDatasourcePlugin
 from core.datasource.website_crawl.website_crawl_plugin import WebsiteCrawlDatasourcePlugin
 from core.rag.entities.event import (
     BaseDatasourceEvent,
@@ -126,7 +129,7 @@ class RagPipelineService:
         # check template name is exist
         template_name = template_info.name
         if template_name:
-            template = db.session.query(PipelineCustomizedTemplate).filter(PipelineCustomizedTemplate.name == template_name, 
+            template = db.session.query(PipelineCustomizedTemplate).filter(PipelineCustomizedTemplate.name == template_name,
                                                                            PipelineCustomizedTemplate.tenant_id == current_user.current_tenant_id,
                                                                            PipelineCustomizedTemplate.id != template_id).first()
             if template:
@@ -1009,7 +1012,7 @@ class RagPipelineService:
         dataset = pipeline.dataset
         if not dataset:
             raise ValueError("Dataset not found")
-        
+
         # check template name is exist
         template_name = args.get("name")
         if template_name:
