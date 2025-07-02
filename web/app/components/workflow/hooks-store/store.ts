@@ -7,13 +7,15 @@ import {
 } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { HooksStoreContext } from './provider'
+import type {
+  BlockEnum,
+  NodeDefault,
+} from '@/app/components/workflow/types'
 import type { IOtherOptions } from '@/service/base'
 import type { VarInInspect } from '@/types/workflow'
 import type {
-    BlockEnum,
   Node,
-  NodeDefault, 
-    ValueSelector,
+  ValueSelector,
 } from '@/app/components/workflow/types'
 
 export type AvailableNodesMetaData = {
@@ -39,6 +41,10 @@ export type CommonHooksFnMap = {
   handleStartWorkflowRun: () => void
   handleWorkflowStartRunInWorkflow: () => void
   handleWorkflowStartRunInChatflow: () => void
+  availableNodesMetaData?: AvailableNodesMetaData
+  getWorkflowRunAndTraceUrl: (runId?: string) => { runUrl: string; traceUrl: string }
+  exportCheck?: () => Promise<void>
+  handleExportDSL?: (include?: boolean) => Promise<void>
   fetchInspectVars: () => Promise<void>
   hasNodeInspectVars: (nodeId: string) => boolean
   hasSetInspectVar: (nodeId: string, name: string, sysVars: VarInInspect[], conversationVars: VarInInspect[]) => boolean
@@ -58,10 +64,6 @@ export type CommonHooksFnMap = {
     conversationVarsUrl: string
     systemVarsUrl: string
   }
-  availableNodesMetaData?: AvailableNodesMetaData
-  getWorkflowRunAndTraceUrl: (runId?: string) => { runUrl: string; traceUrl: string }
-  exportCheck?: () => Promise<void>
-  handleExportDSL?: (include?: boolean) => Promise<void>
 }
 
 export type Shape = {
@@ -80,6 +82,15 @@ export const createHooksStore = ({
   handleStartWorkflowRun = noop,
   handleWorkflowStartRunInWorkflow = noop,
   handleWorkflowStartRunInChatflow = noop,
+  availableNodesMetaData = {
+    nodes: [],
+  },
+  getWorkflowRunAndTraceUrl = () => ({
+    runUrl: '',
+    traceUrl: '',
+  }),
+  exportCheck = async () => noop(),
+  handleExportDSL = async () => noop(),
   fetchInspectVars = async () => noop(),
   hasNodeInspectVars = () => false,
   hasSetInspectVar = () => false,
@@ -95,15 +106,6 @@ export const createHooksStore = ({
   invalidateSysVarValues = noop,
   resetConversationVar = async () => noop(),
   invalidateConversationVarValues = noop,
-  availableNodesMetaData = {
-    nodes: [],
-  },
-  getWorkflowRunAndTraceUrl = () => ({
-    runUrl: '',
-    traceUrl: '',
-  }),
-  exportCheck = async () => noop(),
-  handleExportDSL = async () => noop(),
 }: Partial<Shape>) => {
   return createStore<Shape>(set => ({
     refreshAll: props => set(state => ({ ...state, ...props })),
@@ -118,6 +120,10 @@ export const createHooksStore = ({
     handleStartWorkflowRun,
     handleWorkflowStartRunInWorkflow,
     handleWorkflowStartRunInChatflow,
+    availableNodesMetaData,
+    getWorkflowRunAndTraceUrl,
+    exportCheck,
+    handleExportDSL,
     fetchInspectVars,
     hasNodeInspectVars,
     hasSetInspectVar,
@@ -133,10 +139,6 @@ export const createHooksStore = ({
     invalidateSysVarValues,
     resetConversationVar,
     invalidateConversationVarValues,
-    availableNodesMetaData,
-    getWorkflowRunAndTraceUrl,
-    exportCheck,
-    handleExportDSL,
   }))
 }
 

@@ -1,6 +1,8 @@
 import type { FC } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { memo, useCallback, useEffect, useRef } from 'react'
+import type { VersionHistoryPanelProps } from '@/app/components/workflow/panel/version-history-panel'
+import VersionHistoryPanel from '@/app/components/workflow/panel/version-history-panel'
+import { useShallow } from 'zustand/react/shallow'
 import { useStore as useReactflow } from 'reactflow'
 import { Panel as NodePanel } from '../nodes'
 import { useStore } from '../store'
@@ -12,6 +14,7 @@ export type PanelProps = {
     left?: React.ReactNode
     right?: React.ReactNode
   }
+  versionHistoryPanelProps?: VersionHistoryPanelProps
 }
 
 /**
@@ -60,6 +63,7 @@ const useResizeObserver = (
 
 const Panel: FC<PanelProps> = ({
   components,
+  versionHistoryPanelProps,
 }) => {
   const selectedNode = useReactflow(useShallow((s) => {
     const nodes = s.getNodes()
@@ -103,8 +107,19 @@ const Panel: FC<PanelProps> = ({
         className="relative"
         ref={otherPanelRef}
       >
-        {components?.right}
-        {showEnvPanel && <EnvPanel />}
+        {
+          components?.right
+        }
+        {
+          showWorkflowVersionHistoryPanel && (
+            <VersionHistoryPanel {...versionHistoryPanelProps} />
+          )
+        }
+        {
+          showEnvPanel && (
+            <EnvPanel />
+          )
+        }
       </div>
     </div>
   )

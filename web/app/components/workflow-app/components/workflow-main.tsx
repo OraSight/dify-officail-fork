@@ -8,9 +8,9 @@ import type { WorkflowProps } from '@/app/components/workflow'
 import WorkflowChildren from './workflow-children'
 import {
   useAvailableNodesMetaData,
+  useConfigsMap,
   useDSL,
   useGetRunAndTraceUrl,
-  useConfigsMap,
   useInspectVarsCrud,
   useNodesSyncDraft,
   useSetWorkflowVarsWithValue,
@@ -67,6 +67,12 @@ const WorkflowMain = ({
     handleWorkflowStartRunInChatflow,
     handleWorkflowStartRunInWorkflow,
   } = useWorkflowStartRun()
+  const availableNodesMetaData = useAvailableNodesMetaData()
+  const { getWorkflowRunAndTraceUrl } = useGetRunAndTraceUrl()
+  const {
+    exportCheck,
+    handleExportDSL,
+  } = useDSL()
   const { fetchInspectVars } = useSetWorkflowVarsWithValue()
   const {
     hasNodeInspectVars,
@@ -85,12 +91,6 @@ const WorkflowMain = ({
     invalidateConversationVarValues,
   } = useInspectVarsCrud()
   const configsMap = useConfigsMap()
-  const availableNodesMetaData = useAvailableNodesMetaData()
-  const { getWorkflowRunAndTraceUrl } = useGetRunAndTraceUrl()
-  const {
-    exportCheck,
-    handleExportDSL,
-  } = useDSL()
 
   const hooksStore = useMemo(() => {
     return {
@@ -105,6 +105,10 @@ const WorkflowMain = ({
       handleStartWorkflowRun,
       handleWorkflowStartRunInChatflow,
       handleWorkflowStartRunInWorkflow,
+      availableNodesMetaData,
+      getWorkflowRunAndTraceUrl,
+      exportCheck,
+      handleExportDSL,
       fetchInspectVars,
       hasNodeInspectVars,
       hasSetInspectVar,
@@ -121,10 +125,6 @@ const WorkflowMain = ({
       resetConversationVar,
       invalidateConversationVarValues,
       configsMap,
-      availableNodesMetaData,
-      getWorkflowRunAndTraceUrl,
-      exportCheck,
-      handleExportDSL,
     }
   }, [
     syncWorkflowDraftWhenPageClose,
