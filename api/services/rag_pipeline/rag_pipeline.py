@@ -20,12 +20,9 @@ from core.datasource.entities.datasource_entities import (
     DatasourceProviderType,
     GetOnlineDocumentPageContentRequest,
     OnlineDocumentPagesMessage,
-    OnlineDriveBrowseFilesRequest,
-    OnlineDriveBrowseFilesResponse,
     WebsiteCrawlMessage,
 )
 from core.datasource.online_document.online_document_plugin import OnlineDocumentDatasourcePlugin
-from core.datasource.online_drive.online_drive_plugin import OnlineDriveDatasourcePlugin
 from core.datasource.website_crawl.website_crawl_plugin import WebsiteCrawlDatasourcePlugin
 from core.rag.entities.event import (
     BaseDatasourceEvent,
@@ -129,9 +126,15 @@ class RagPipelineService:
         # check template name is exist
         template_name = template_info.name
         if template_name:
-            template = db.session.query(PipelineCustomizedTemplate).filter(PipelineCustomizedTemplate.name == template_name,
-                                                                           PipelineCustomizedTemplate.tenant_id == current_user.current_tenant_id,
-                                                                           PipelineCustomizedTemplate.id != template_id).first()
+            template = (
+                db.session.query(PipelineCustomizedTemplate)
+                .filter(
+                    PipelineCustomizedTemplate.name == template_name,
+                    PipelineCustomizedTemplate.tenant_id == current_user.current_tenant_id,
+                    PipelineCustomizedTemplate.id != template_id,
+                )
+                .first()
+            )
             if template:
                 raise ValueError("Template name is already exists")
         customized_template.name = template_info.name
@@ -642,7 +645,7 @@ class RagPipelineService:
                     except Exception as e:
                         logger.exception("Error during get online document content.")
                         raise RuntimeError(str(e))
-                #TODO Online Drive
+                # TODO Online Drive
                 case _:
                     raise ValueError(f"Unsupported datasource provider: {datasource_runtime.datasource_provider_type}")
         except Exception as e:
@@ -823,7 +826,9 @@ class RagPipelineService:
         Get first step parameters of rag pipeline
         """
 
-        workflow = self.get_draft_workflow(pipeline=pipeline) if is_draft else self.get_published_workflow(pipeline=pipeline)
+        workflow = (
+            self.get_draft_workflow(pipeline=pipeline) if is_draft else self.get_published_workflow(pipeline=pipeline)
+        )
         if not workflow:
             raise ValueError("Workflow not initialized")
 
@@ -849,7 +854,7 @@ class RagPipelineService:
                 match = re.match(pattern, value["value"])
                 if match:
                     full_path = match.group(1)
-                    last_part = full_path.split('.')[-1]
+                    last_part = full_path.split(".")[-1]
                     user_input_variables.append(variables_map.get(last_part, {}))
         return user_input_variables
 
@@ -858,7 +863,9 @@ class RagPipelineService:
         Get second step parameters of rag pipeline
         """
 
-        workflow = self.get_draft_workflow(pipeline=pipeline) if is_draft else self.get_published_workflow(pipeline=pipeline)
+        workflow = (
+            self.get_draft_workflow(pipeline=pipeline) if is_draft else self.get_published_workflow(pipeline=pipeline)
+        )
         if not workflow:
             raise ValueError("Workflow not initialized")
 
@@ -884,14 +891,14 @@ class RagPipelineService:
                     match = re.match(pattern, value["value"])
                     if match:
                         full_path = match.group(1)
-                        last_part = full_path.split('.')[-1]
+                        last_part = full_path.split(".")[-1]
                         variables_map.pop(last_part)
         all_second_step_variables = list(variables_map.values())
         datasource_provider_variables = [
-                item
-                for item in all_second_step_variables
-                if item.get("belong_to_node_id") == node_id or item.get("belong_to_node_id") == "shared"
-            ]
+            item
+            for item in all_second_step_variables
+            if item.get("belong_to_node_id") == node_id or item.get("belong_to_node_id") == "shared"
+        ]
         return datasource_provider_variables
 
     def get_rag_pipeline_paginate_workflow_runs(self, pipeline: Pipeline, args: dict) -> InfiniteScrollPagination:
@@ -1016,10 +1023,14 @@ class RagPipelineService:
         # check template name is exist
         template_name = args.get("name")
         if template_name:
-            template = db.session.query(PipelineCustomizedTemplate).filter(
-                PipelineCustomizedTemplate.name == template_name,
-                PipelineCustomizedTemplate.tenant_id == pipeline.tenant_id,
-            ).first()
+            template = (
+                db.session.query(PipelineCustomizedTemplate)
+                .filter(
+                    PipelineCustomizedTemplate.name == template_name,
+                    PipelineCustomizedTemplate.tenant_id == pipeline.tenant_id,
+                )
+                .first()
+            )
             if template:
                 raise ValueError("Template name is already exists")
 
