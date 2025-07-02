@@ -2,7 +2,6 @@ import type { Viewport } from 'reactflow'
 import type { BlockEnum, CommonNodeType, ConversationVariable, Edge, EnvironmentVariable, InputVar, Node, ValueSelector, VarType, Variable } from '@/app/components/workflow/types'
 import type { TransferMethod } from '@/types/app'
 import type { ErrorHandleTypeEnum } from '@/app/components/workflow/nodes/_base/components/error-handle/types'
-import type { RAGPipelineVariables } from '@/models/pipeline'
 import type { BeforeRunFormProps } from '@/app/components/workflow/nodes/_base/components/before-run-form'
 import type { SpecialResultPanelProps } from '@/app/components/workflow/run/special-result-panel'
 import type { MutableRefObject } from 'react'
@@ -124,7 +123,6 @@ export type FetchWorkflowDraftResponse = {
   tool_published: boolean
   environment_variables?: EnvironmentVariable[]
   conversation_variables?: ConversationVariable[]
-  rag_pipeline_variables?: RAGPipelineVariables
   version: string
   marked_name: string
   marked_comment: string
@@ -133,7 +131,7 @@ export type FetchWorkflowDraftResponse = {
 export type VersionHistory = FetchWorkflowDraftResponse
 
 export type FetchWorkflowDraftPageParams = {
-  url: string
+  appId: string
   initialPage: number
   limit: number
   userId?: string
@@ -347,13 +345,12 @@ export type WorkflowConfigResponse = {
 }
 
 export type PublishWorkflowParams = {
-  url: string
   title: string
   releaseNotes: string
 }
 
 export type UpdateWorkflowParams = {
-  url: string
+  workflowId: string
   title: string
   releaseNotes: string
 }

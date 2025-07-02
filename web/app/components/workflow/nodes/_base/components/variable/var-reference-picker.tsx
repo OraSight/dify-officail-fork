@@ -6,22 +6,20 @@ import {
   RiArrowDownSLine,
   RiCloseLine,
   RiErrorWarningFill,
+  RiLoader4Line,
   RiMoreLine,
 } from '@remixicon/react'
 import produce from 'immer'
-import {
-  useNodes,
-  useReactFlow,
-  useStoreApi,
-} from 'reactflow'
+import { useReactFlow, useStoreApi } from 'reactflow'
 import RemoveButton from '../remove-button'
 import useAvailableVarList from '../../hooks/use-available-var-list'
 import VarReferencePopup from './var-reference-popup'
 import { getNodeInfoById, isConversationVar, isENV, isRagVariableVar, isSystemVar, varTypeToStructType } from './utils'
 import ConstantField from './constant-field'
 import cn from '@/utils/classnames'
-import type { CommonNodeType, NodeOutPutVar, ValueSelector, Var } from '@/app/components/workflow/types'
-import type { CredentialFormSchema } from '@/app/components/header/account-setting/model-provider-page/declarations'
+import type { Node, NodeOutPutVar, ToolWithProvider, ValueSelector, Var } from '@/app/components/workflow/types'
+import type { CredentialFormSchemaSelect } from '@/app/components/header/account-setting/model-provider-page/declarations'
+import { type CredentialFormSchema, type FormOption, FormTypeEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import { BlockEnum } from '@/app/components/workflow/types'
 import { VarBlockIcon } from '@/app/components/workflow/block-icon'
 import { Line3 } from '@/app/components/base/icons/src/public/common'
@@ -44,8 +42,10 @@ import Tooltip from '@/app/components/base/tooltip'
 import { isExceptionVariable } from '@/app/components/workflow/utils'
 import VarFullPathPanel from './var-full-path-panel'
 import { noop } from 'lodash-es'
+import { useFetchDynamicOptions } from '@/service/use-plugins'
+import type { Tool } from '@/app/components/tools/types'
 import { InputField } from '@/app/components/base/icons/src/vender/pipeline'
-import { useStore as useWorkflowStore } from '@/app/components/workflow/store'
+
 const TRIGGER_DEFAULT_WIDTH = 227
 
 type Props = {
@@ -73,6 +73,8 @@ type Props = {
   minWidth?: number
   popupFor?: 'assigned' | 'toAssigned'
   zIndex?: number
+  currentTool?: Tool
+  currentProvider?: ToolWithProvider
 }
 
 const DEFAULT_VALUE_SELECTOR: Props['value'] = []
@@ -102,11 +104,16 @@ const VarReferencePicker: FC<Props> = ({
   minWidth,
   popupFor,
   zIndex,
+  currentTool,
+  currentProvider,
 }) => {
   const { t } = useTranslation()
   const store = useStoreApi()
-  const nodes = useNodes<CommonNodeType>()
+  const {
+    getNodes,
+  } = store.getState()
   const isChatMode = useIsChatMode()
+
   const { getCurrentVariableType } = useWorkflowVariables()
   const { availableVars, availableNodesWithParent: availableNodes } = useAvailableVarList(nodeId, {
     onlyLeafNodeVar,
@@ -120,13 +127,12 @@ const VarReferencePicker: FC<Props> = ({
     return node.data.type === BlockEnum.Start
   })
 
-  const node = nodes.find(n => n.id === nodeId)
-  const ragPipelineVariables = useWorkflowStore(s => s.ragPipelineVariables)
-  const isInIteration = !!(node?.data as any).isInIteration
-  const iterationNode = isInIteration ? nodes.find(n => n.id === node?.parentId) : null
+  const node = getNodes().find(n => n.id === nodeId)
+  const isInIteration = !!node?.data.isInIteration
+  const iterationNode = isInIteration ? getNodes().find(n => n.id === node.parentId) : null
 
-  const isInLoop = !!(node?.data as any).isInLoop
-  const loopNode = isInLoop ? nodes.find(n => n.id === node?.parentId) : null
+  const isInLoop = !!node?.data.isInLoop
+  const loopNode = isInLoop ? getNodes().find(n => n.id === node.parentId) : null
 
   const triggerRef = useRef<HTMLDivElement>(null)
   const [triggerWidth, setTriggerWidth] = useState(TRIGGER_DEFAULT_WIDTH)
@@ -139,10 +145,7 @@ const VarReferencePicker: FC<Props> = ({
   const [varKindType, setVarKindType] = useState<VarKindType>(defaultVarKindType)
   const isConstant = isSupportConstantValue && varKindType === VarKindType.constant
 
-  const outputVars = useMemo(() => {
-    const results = passedInAvailableVars || availableVars
-    return results
-  }, [passedInAvailableVars, availableVars])
+  const outputVars = useMemo(() => (passedInAvailableVars || availableVars), [passedInAvailableVars, availableVars])
 
   const [open, setOpen] = useState(false)
   useEffect(() => {
@@ -182,9 +185,11 @@ const VarReferencePicker: FC<Props> = ({
       return startNode?.data
 
     const node = getNodeInfoById(availableNodes, outputVarNodeId)?.data
-    return {
-      ...node,
-      id: outputVarNodeId,
+    if (node) {
+      return {
+        ...node,
+        id: outputVarNodeId,
+      }
     }
   }, [value, hasValue, isConstant, isIterationVar, iterationNode, availableNodes, outputVarNodeId, startNode, isLoopVar, loopNode])
 
@@ -273,7 +278,7 @@ const VarReferencePicker: FC<Props> = ({
   }, [availableNodes, reactflow, store])
 
   const type = getCurrentVariableType({
-    parentNode: (isInIteration ? iterationNode : loopNode) as any,
+    parentNode: isInIteration ? iterationNode : loopNode,
     valueSelector: value as ValueSelector,
     availableNodes,
     isChatMode,
@@ -325,6 +330,41 @@ const VarReferencePicker: FC<Props> = ({
     return null
   }, [isValidVar, isShowAPart, hasValue, t, outputVarNode?.title, outputVarNode?.type, value, type])
 
+  const [dynamicOptions, setDynamicOptions] = useState<FormOption[] | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { mutateAsync: fetchDynamicOptions } = useFetchDynamicOptions(
+    currentProvider?.plugin_id || '', currentProvider?.name || '', currentTool?.name || '', (schema as CredentialFormSchemaSelect)?.variable || '',
+    'tool',
+  )
+  const handleFetchDynamicOptions = async () => {
+    if (schema?.type !== FormTypeEnum.dynamicSelect || !currentTool || !currentProvider)
+      return
+    setIsLoading(true)
+    try {
+      const data = await fetchDynamicOptions()
+      setDynamicOptions(data?.options || [])
+    }
+ finally {
+      setIsLoading(false)
+    }
+  }
+  useEffect(() => {
+    handleFetchDynamicOptions()
+  }, [currentTool, currentProvider, schema])
+
+  const schemaWithDynamicSelect = useMemo(() => {
+    if (schema?.type !== FormTypeEnum.dynamicSelect)
+      return schema
+    // rewrite schema.options with dynamicOptions
+    if (dynamicOptions) {
+      return {
+        ...schema,
+        options: dynamicOptions,
+      }
+    }
+    return schema
+  }, [dynamicOptions])
+
   return (
     <div className={cn(className, !readonly && 'cursor-pointer')}>
       <PortalToFollowElem
@@ -375,8 +415,9 @@ const VarReferencePicker: FC<Props> = ({
                     <ConstantField
                       value={value as string}
                       onChange={onChange as ((value: string | number, varKindType: VarKindType, varInfo?: Var) => void)}
-                      schema={schema as CredentialFormSchema}
+                      schema={schemaWithDynamicSelect as CredentialFormSchema}
                       readonly={readonly}
+                      isLoading={isLoading}
                     />
                   )
                   : (
@@ -421,6 +462,7 @@ const VarReferencePicker: FC<Props> = ({
                                   )}
                                   <div className='flex items-center text-text-accent'>
                                     {!hasValue && <Variable02 className='h-3.5 w-3.5' />}
+                                    {isLoading && <RiLoader4Line className='h-3.5 w-3.5 animate-spin text-text-secondary' />}
                                     {isEnv && <Env className='h-3.5 w-3.5 text-util-colors-violet-violet-600' />}
                                     {isChatVar && <BubbleX className='h-3.5 w-3.5 text-util-colors-teal-teal-700' />}
                                     {isRagVar && <InputField className='h-3.5 w-3.5 text-text-accent' />}
@@ -434,7 +476,16 @@ const VarReferencePicker: FC<Props> = ({
                                   {!isValidVar && <RiErrorWarningFill className='ml-0.5 h-3 w-3 text-text-destructive' />}
                                 </>
                               )
-                              : <div className={`overflow-hidden ${readonly ? 'text-components-input-text-disabled' : 'text-components-input-text-placeholder'} system-sm-regular text-ellipsis`}>{placeholder ?? t('workflow.common.setVarValuePlaceholder')}</div>}
+                              : <div className={`overflow-hidden ${readonly ? 'text-components-input-text-disabled' : 'text-components-input-text-placeholder'} system-sm-regular text-ellipsis`}>
+                                {isLoading ? (
+                                  <div className='flex items-center'>
+                                    <RiLoader4Line className='mr-1 h-3.5 w-3.5 animate-spin text-text-secondary' />
+                                    <span>{placeholder ?? t('workflow.common.setVarValuePlaceholder')}</span>
+                                  </div>
+                                ) : (
+                                  placeholder ?? t('workflow.common.setVarValuePlaceholder')
+                                )}
+                              </div>}
                           </div>
                         </Tooltip>
                       </div>

@@ -1,7 +1,6 @@
 import { InputVarType } from '@/app/components/workflow/types'
 import { AgentStrategy } from '@/types/app'
 import { PromptRole } from '@/models/debug'
-import { PipelineInputVarType } from '@/models/pipeline'
 import { DatasetAttr } from '@/types/feature'
 
 const getBooleanConfig = (envVar: string | undefined, dataAttrKey: DatasetAttr, defaultValue: boolean = true) => {
@@ -143,15 +142,6 @@ export const VAR_ITEM_TEMPLATE_IN_WORKFLOW = {
   options: [],
 }
 
-export const VAR_ITEM_TEMPLATE_IN_PIPELINE = {
-  variable: '',
-  label: '',
-  type: PipelineInputVarType.textInput,
-  max_length: DEFAULT_VALUE_MAX_LEN,
-  required: true,
-  options: [],
-}
-
 export const appDefaultIconBackground = '#D5F5F6'
 
 export const NEED_REFRESH_APP_LIST_KEY = 'needRefreshAppList'
@@ -261,7 +251,7 @@ Thought: {{agent_scratchpad}}
   `,
 }
 
-export const VAR_REGEX = /\{\{(#[a-zA-Z0-9_-]{1,50}(\.\d+)?(\.[a-zA-Z_]\w{0,29}){1,10}#)\}\}/gi
+export const VAR_REGEX = /\{\{(#[a-zA-Z0-9_-]{1,50}(\.[a-zA-Z_]\w{0,29}){1,10}#)\}\}/gi
 
 export const resetReg = () => VAR_REGEX.lastIndex = 0
 
