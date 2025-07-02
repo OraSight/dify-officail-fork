@@ -115,8 +115,8 @@ class PipelineRunner(WorkflowBasedAppRunner):
                 for v in workflow.rag_pipeline_variables:
                     rag_pipeline_variable = RAGPipelineVariable(**v)
                     if (
-                        rag_pipeline_variable.belong_to_node_id == self.application_generate_entity.start_node_id
-                        or rag_pipeline_variable.belong_to_node_id == "shared"
+                        rag_pipeline_variable.belong_to_node_id
+                        in (self.application_generate_entity.start_node_id, "shared")
                     ) and rag_pipeline_variable.variable in inputs:
                         rag_pipeline_variables.append(
                             RAGPipelineVariableInput(
