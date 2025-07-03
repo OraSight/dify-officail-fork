@@ -11,7 +11,7 @@ type AppsQuery = {
 function parseParams(params: ReadonlyURLSearchParams): AppsQuery {
   const tagIDs = params.get('tagIDs')?.split(';')
   const keywords = params.get('keywords') || undefined
-  const isCreatedByMe = params.get('isCreatedByMe') === 'true'
+  const isCreatedByMe = params.get('isCreatedByMe') ? params.get('isCreatedByMe') === 'true' : true
   return { tagIDs, keywords, isCreatedByMe }
 }
 

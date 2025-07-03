@@ -62,7 +62,7 @@ const Apps = () => {
   const [activeTab, setActiveTab] = useTabSearchParams({
     defaultTab: 'all',
   })
-  const { query: { tagIDs = [], keywords = '', isCreatedByMe: queryIsCreatedByMe = false }, setQuery } = useAppsQueryState()
+  const { query: { tagIDs = [], keywords = '', isCreatedByMe: queryIsCreatedByMe = true }, setQuery } = useAppsQueryState()
   const [isCreatedByMe, setIsCreatedByMe] = useState(queryIsCreatedByMe)
   const [tagFilterValue, setTagFilterValue] = useState<string[]>(tagIDs)
   const [searchKeywords, setSearchKeywords] = useState(keywords)
