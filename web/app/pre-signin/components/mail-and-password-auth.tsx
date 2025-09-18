@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useContext } from 'use-context-selector'
@@ -56,9 +56,9 @@ export default function MailAndPasswordAuth({ isInvite, isEmailSetup, allowRegis
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
-  const emailFromLink = decodeURIComponent(searchParams.get('email') || 'openhydra@openhydra.net')
+  const emailFromLink = decodeURIComponent(searchParams.get('email') || 'likai@openhydra.net')
   const [email, setEmail] = useState(emailFromLink)
-  const [password, setPassword] = useState('Openhydra@123 ')
+  const [password, setPassword] = useState('OpenHydra@123!')
   const [isLoading, setIsLoading] = useState(false)
   const handleEmailPasswordLogin = async () => {
     if (!email) {
@@ -136,6 +136,10 @@ export default function MailAndPasswordAuth({ isInvite, isEmailSetup, allowRegis
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    handleEmailPasswordLogin()
+  }, [])
 
   return <form onSubmit={noop}>
     <div className='mb-3'>

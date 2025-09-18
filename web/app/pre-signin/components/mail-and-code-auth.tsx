@@ -19,7 +19,7 @@ export default function MailAndCodeAuth({ isInvite }: MailAndCodeAuthProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const emailFromLink = decodeURIComponent(searchParams.get('email') || 'openhydra@openhydra.net')
+  const emailFromLink = decodeURIComponent(searchParams.get('email') || 'likai@openhydra.net')
   const [email, setEmail] = useState(emailFromLink)
   const [loading, setIsLoading] = useState(false)
   const { locale } = useContext(I18NContext)
