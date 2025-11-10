@@ -89,6 +89,11 @@ kaleido = "0.2.1"
 rank-bm25 = "~0.2.2"
 safetensors = "~0.4.3"
 
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+priority = "primary"
+
 ############################################################
 # [ Tools ] dependency group
 ############################################################

@@ -1,6 +1,8 @@
+import os
 import uuid
 from typing import cast
 
+# from api.core.tools.utils import parser
 from flask_login import current_user  # type: ignore
 from flask_restful import Resource, inputs, marshal, marshal_with, reqparse  # type: ignore
 from sqlalchemy import select
@@ -26,9 +28,33 @@ from libs.login import login_required
 from models import Account, App
 from services.app_dsl_service import AppDslService, ImportMode
 from services.app_service import AppService
+import requests
 
 ALLOW_CREATE_APP_MODES = ["chat", "agent-chat", "advanced-chat", "workflow", "completion"]
 
+class OpenhydraTokenValidationApi(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("token", type=str, required=True, location="args")
+        # read env variable OPENHYDRA_ADDRESS
+        openhydra_address = os.getenv("OPENHYDRA_ADDRESS")
+        if not openhydra_address:
+            abort(400, message="OPENHYDRA_ADDRESS is not set")
+        path = f"{openhydra_address}"
+        args = parser.parse_args()
+        token = args["token"]
+
+
+        try:
+            response = requests.get(path, headers={"X-Auth-Token-JWT": f"{token}"}, timeout=5)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            abort(500, message=f"Openhydra request failed")
+
+        data = response.json()
+
+        return data
+        
 
 class AppListApi(Resource):
     @setup_required
@@ -340,6 +366,7 @@ class AppTraceApi(Resource):
 
 
 api.add_resource(AppListApi, "/apps")
+api.add_resource(OpenhydraTokenValidationApi, "/apps/validate-openhydra-token")
 api.add_resource(AppApi, "/apps/<uuid:app_id>")
 api.add_resource(AppCopyApi, "/apps/<uuid:app_id>/copy")
 api.add_resource(AppExportApi, "/apps/<uuid:app_id>/export")
