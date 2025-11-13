@@ -69,6 +69,10 @@ export const fetchInitValidateStatus = () => {
   return get<InitValidateStatusResponse>('/init')
 }
 
+export const getToken: Fetcher<Provider[] | null, { url: string; params: Record<string, any> }> = ({ url, params }) => {
+  return get<Provider[] | null>(url, { params })
+}
+
 export const fetchSetupStatus = () => {
   return get<SetupStatusResponse>('/setup')
 }
